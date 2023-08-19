@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 3.12)
+project(pdftoc)
+set(MUPDF_INSTALL_PATH "/usr/local")
+link_directories(${MUPDF_INSTALL_PATH}/lib)
+include_directories(${MUPDF_INSTALL_PATH}/include)
+set(SOURCES main.c)
+add_executable(pdftoc ${SOURCES})
+target_link_libraries(pdftoc mupdf mupdf-third)
