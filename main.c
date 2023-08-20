@@ -1,20 +1,20 @@
 #include <stdio.h>
 #include <mupdf/fitz.h>
+#include <json-c/json.h>
 
-void printOutline(fz_context *ctx, fz_outline *outline, int level)
+void printOutline(fz_context *ctx, fz_outline *outline, int level, struct json_object* parent)
 {
-    for (int i = 0; i < level; i++) {
-        printf("  ");
-    }
-
-    printf("%s\n", outline->title);
+    struct json_object* titleObj = json_object_new_string(outline->title);
+    json_object_array_add(parent, titleObj);
 
     if (outline->down != NULL) {
-        printOutline(ctx, outline->down, level + 1);
+        struct json_object* childrenObj = json_object_new_array();
+        json_object_array_add(parent, childrenObj);
+        printOutline(ctx, outline->down, level + 1, childrenObj);
     }
 
     if (outline->next != NULL) {
-        printOutline(ctx, outline->next, level);
+        printOutline(ctx, outline->next, level, parent);
     }
 }
 
@@ -58,7 +58,13 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    printOutline(ctx, outline, 0);
+    struct json_object* rootObj = json_object_new_array();
+    printOutline(ctx, outline, 0, rootObj);
+
+    const char* jsonString = json_object_to_json_string_ext(rootObj, JSON_C_TO_STRING_PRETTY);
+    printf("%s\n", jsonString);
+
+    json_object_put(rootObj);
 
     fz_drop_outline(ctx, outline);
     fz_drop_document(ctx, doc);
